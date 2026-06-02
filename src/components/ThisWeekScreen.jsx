@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getWeekOfYear, getWeekKey, getCurrentLifeWeek, getBirthYear, TOTAL_WEEKS } from '../utils/lifeWeeks';
+import { getWeekOfYear, getWeekKey, getCurrentLifeWeek, getBirthDate, TOTAL_WEEKS } from '../utils/lifeWeeks';
 import { localSetEntry } from '../utils/storage';
 import { useDiary } from '../data/DiaryContext';
 
@@ -9,15 +9,17 @@ export default function ThisWeekScreen({ onRequestSignup }) {
   const today = new Date();
   const weekOfYear = getWeekOfYear(today);
   const weekKey = getWeekKey(today);
-  const birthYear = getBirthYear();
-  const currentWeek = getCurrentLifeWeek(birthYear);
+  const birthday = getBirthDate();
+  const currentWeek = getCurrentLifeWeek(birthday);
 
   const [entry, setEntry] = useState(() => getEntry('weekly', weekKey));
   const [saveState, setSaveState] = useState('idle');
 
   useEffect(() => {
-    setEntry(getEntry('weekly', weekKey));
-    setSaveState('idle');
+    queueMicrotask(() => {
+      setEntry(getEntry('weekly', weekKey));
+      setSaveState('idle');
+    });
   }, [weekKey, loaded, getEntry]);
 
   const update = (patch) => {

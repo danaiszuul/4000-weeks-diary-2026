@@ -1,19 +1,24 @@
 import { useState } from 'react';
-import { setBirthYear } from '../utils/lifeWeeks';
+import { getDateKey, setBirthDate } from '../utils/lifeWeeks';
 import { useAuth } from '../auth/AuthContext';
 
 export default function SetupModal({ onComplete, onClose }) {
-  const { isAuthenticated, saveBirthYear } = useAuth();
-  const [year, setYear] = useState('');
+  const { isAuthenticated, saveBirthday } = useAuth();
+  const [birthday, setBirthday] = useState('');
+
+  const todayKey = getDateKey(new Date());
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const yearNum = parseInt(year, 10);
-    if (yearNum >= 1900 && yearNum <= new Date().getFullYear()) {
-      setBirthYear(yearNum);
+    const birthDate = new Date(`${birthday}T00:00:00`);
+    const earliestDate = new Date('1900-01-01T00:00:00');
+    const latestDate = new Date(`${todayKey}T00:00:00`);
+
+    if (birthday && birthDate >= earliestDate && birthDate <= latestDate) {
+      setBirthDate(birthday);
       // Keep it on the account too, when signed in, so it follows the user.
       if (isAuthenticated) {
-        saveBirthYear(yearNum).catch(() => {});
+        saveBirthday(birthday).catch(() => {});
       }
       onComplete();
     }
@@ -37,22 +42,22 @@ export default function SetupModal({ onComplete, onClose }) {
           )}
         </div>
         <p className="text-gray-300 text-sm mb-6 leading-relaxed">
-          Enter your birth year to chart how many of life's weeks are behind you —
+          Enter your birthday to chart how many of life's weeks are behind you —
           a reminder to focus on what truly matters.
         </p>
 
         <form onSubmit={handleSubmit}>
           <label className="block mb-4">
-            <span className="text-sm text-gray-400 block mb-2">Birth Year</span>
+            <span className="text-sm text-gray-400 block mb-2">Birthday</span>
             <input
-              type="number"
-              value={year}
-              onChange={(e) => setYear(e.target.value)}
-              min="1900"
-              max={new Date().getFullYear()}
-              placeholder="e.g. 1990"
+              type="date"
+              value={birthday}
+              onChange={(e) => setBirthday(e.target.value)}
+              min="1900-01-01"
+              max={todayKey}
               className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white font-mono text-lg focus:outline-none focus:border-cyber-cyan focus:ring-2 focus:ring-cyber-cyan/50 transition-all"
               autoFocus
+              required
             />
           </label>
 

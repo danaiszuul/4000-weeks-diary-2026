@@ -1,8 +1,8 @@
-import { getCurrentLifeWeek, getBirthYear, getWeeksRemaining, getLifeProgress, TOTAL_WEEKS } from '../utils/lifeWeeks';
+import { getCurrentLifeWeek, getBirthDate, getWeeksRemaining, getLifeProgress, TOTAL_WEEKS } from '../utils/lifeWeeks';
 
 export default function LifeBarScreen({ onSetBirthYear, onRequestSignup }) {
-  const birthYear = getBirthYear();
-  const currentWeek = getCurrentLifeWeek(birthYear);
+  const birthday = getBirthDate();
+  const currentWeek = getCurrentLifeWeek(birthday);
   const weeksRemaining = getWeeksRemaining(currentWeek);
   const lifeProgress = getLifeProgress(currentWeek);
 
@@ -98,13 +98,13 @@ export default function LifeBarScreen({ onSetBirthYear, onRequestSignup }) {
           ) : (
             <div className="text-center py-12">
               <p className="text-gray-300 mb-6">
-                Enter your birth year to chart your lifeline — no account needed.
+                Enter your birthday to chart your lifeline — no account needed.
               </p>
               <button
                 onClick={() => onSetBirthYear?.()}
                 className="bg-gradient-to-r from-cyber-cyan to-cyber-magenta text-white font-semibold py-3 px-8 rounded-lg hover:shadow-lg hover:shadow-cyber-cyan/30 transition-all"
               >
-                Set birth year
+                Set birthday
               </button>
               <p className="text-xs text-gray-500 mt-4">
                 Want to keep a diary too?{' '}

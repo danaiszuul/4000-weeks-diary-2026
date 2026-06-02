@@ -48,12 +48,15 @@ export function AuthProvider({ children }) {
     return u;
   }, []);
 
-  const signup = useCallback(async (email, password, name, birthYear) => {
-    // Birth year is captured at sign-up and stored in the account so the
+  const signup = useCallback(async (email, password, name, birthday) => {
+    // Birthday is captured at sign-up and stored in the account so the
     // life-week math follows the user across devices.
     const metadata = {};
     if (name) metadata.full_name = name;
-    if (birthYear) metadata.birthYear = birthYear;
+    if (birthday) {
+      metadata.birthDate = birthday;
+      metadata.birthYear = parseInt(birthday.slice(0, 4), 10);
+    }
     return identitySignup(
       email,
       password,
@@ -66,11 +69,16 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
-  // Birth year travels with the account so it follows the user across devices.
-  const saveBirthYear = useCallback(
-    async (year) => {
+  // Birthday travels with the account so it follows the user across devices.
+  const saveBirthday = useCallback(
+    async (birthday) => {
       if (!user) return;
-      const updated = await updateUser({ data: { birthYear: year } });
+      const updated = await updateUser({
+        data: {
+          birthDate: birthday,
+          birthYear: parseInt(birthday.slice(0, 4), 10),
+        },
+      });
       setUser(updated);
     },
     [user],
@@ -83,7 +91,7 @@ export function AuthProvider({ children }) {
     login,
     signup,
     logout,
-    saveBirthYear,
+    saveBirthday,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

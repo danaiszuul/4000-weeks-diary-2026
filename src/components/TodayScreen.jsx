@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   formatDate, getDateKey, parseDateKey, isSameDay,
-  getCurrentLifeWeek, getBirthYear, TOTAL_WEEKS,
+  getCurrentLifeWeek, getBirthDate, TOTAL_WEEKS,
 } from '../utils/lifeWeeks';
 import { getQuoteForDate } from '../data/quotes';
 import { localSetEntry } from '../utils/storage';
@@ -16,8 +16,8 @@ export default function TodayScreen({ onRequestSignup }) {
   const selectedDate = parseDateKey(selectedKey);
   const isToday = isSameDay(selectedDate, today);
 
-  const birthYear = getBirthYear();
-  const currentWeek = getCurrentLifeWeek(birthYear);
+  const birthday = getBirthDate();
+  const currentWeek = getCurrentLifeWeek(birthday);
   const quote = getQuoteForDate(selectedDate);
 
   const [entry, setEntry] = useState(() => getEntry('daily', selectedKey));
@@ -26,8 +26,10 @@ export default function TodayScreen({ onRequestSignup }) {
 
   // Reload the entry whenever the selected day changes or server data arrives.
   useEffect(() => {
-    setEntry(getEntry('daily', selectedKey));
-    setSaveState('idle');
+    queueMicrotask(() => {
+      setEntry(getEntry('daily', selectedKey));
+      setSaveState('idle');
+    });
   }, [selectedKey, loaded, getEntry]);
 
   const update = (patch) => {

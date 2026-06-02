@@ -1,13 +1,21 @@
 import { useState } from 'react';
 import { AuthError, MissingIdentityError } from '@netlify/identity';
 import { useAuth } from '../auth/AuthContext';
+import { getBirthYear, setBirthYear } from '../utils/lifeWeeks';
 
-export default function AuthModal({ onClose }) {
+const THIS_YEAR = new Date().getFullYear();
+
+export default function AuthModal({ onClose, initialMode = 'login' }) {
   const { login, signup } = useAuth();
-  const [mode, setMode] = useState('login'); // 'login' | 'signup'
+  const [mode, setMode] = useState(initialMode); // 'login' | 'signup'
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  // Prefill the birth year if one was already entered to preview the lifeline.
+  const [birthYear, setBirthYearField] = useState(() => {
+    const existing = getBirthYear();
+    return existing ? String(existing) : '';
+  });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -22,7 +30,16 @@ export default function AuthModal({ onClose }) {
         await login(email, password);
         onClose();
       } else {
-        const u = await signup(email, password, name);
+        const yearNum = parseInt(birthYear, 10);
+        if (!yearNum || yearNum < 1900 || yearNum > THIS_YEAR) {
+          setError('Please enter a valid birth year.');
+          setBusy(false);
+          return;
+        }
+        // Persist locally so the lifeline works immediately, and pass it to the
+        // account so it follows the user across devices.
+        setBirthYear(yearNum);
+        const u = await signup(email, password, name, yearNum);
         if (u?.emailVerified) {
           // Autoconfirm is on — the user is logged in immediately.
           await login(email, password);
@@ -79,6 +96,25 @@ export default function AuthModal({ onClose }) {
                 onChange={(e) => setName(e.target.value)}
                 className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-cyber-cyan focus:ring-2 focus:ring-cyber-cyan/50 transition-all"
               />
+            </label>
+          )}
+
+          {mode === 'signup' && (
+            <label className="block">
+              <span className="text-sm text-gray-400 block mb-2">Birth year</span>
+              <input
+                type="number"
+                required
+                value={birthYear}
+                onChange={(e) => setBirthYearField(e.target.value)}
+                min="1900"
+                max={THIS_YEAR}
+                placeholder="e.g. 1990"
+                className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white font-mono focus:outline-none focus:border-cyber-cyan focus:ring-2 focus:ring-cyber-cyan/50 transition-all"
+              />
+              <span className="text-xs text-gray-500 block mt-2">
+                Used to chart your life in weeks.
+              </span>
             </label>
           )}
 

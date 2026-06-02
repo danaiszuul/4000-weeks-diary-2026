@@ -3,7 +3,7 @@ import { getWeekOfYear, getWeekKey, getCurrentLifeWeek, getBirthYear, TOTAL_WEEK
 import { localSetEntry } from '../utils/storage';
 import { useDiary } from '../data/DiaryContext';
 
-export default function ThisWeekScreen() {
+export default function ThisWeekScreen({ onRequestSignup }) {
   const { getEntry, saveEntry, loaded, isAuthenticated } = useDiary();
 
   const today = new Date();
@@ -180,22 +180,36 @@ export default function ThisWeekScreen() {
 
           {/* Save */}
           <div className="mt-8 pt-6 border-t border-white/10">
-            <button
-              onClick={handleSave}
-              disabled={saveState === 'saving'}
-              className={`w-full font-semibold py-3 px-6 rounded-lg transition-all disabled:opacity-60 ${
-                saveState === 'saved'
-                  ? 'bg-cyber-cyan/20 border border-cyber-cyan text-cyber-cyan'
-                  : 'bg-gradient-to-r from-cyber-cyan to-cyber-magenta text-white hover:shadow-lg hover:shadow-cyber-cyan/30'
-              }`}
-            >
-              {saveLabel}
-            </button>
-            <p className="text-center text-xs text-gray-500 mt-3">
-              {isAuthenticated
-                ? 'Saved to your account — reachable from any device.'
-                : 'Saved on this device. Sign in to keep it synced everywhere.'}
-            </p>
+            {isAuthenticated ? (
+              <>
+                <button
+                  onClick={handleSave}
+                  disabled={saveState === 'saving'}
+                  className={`w-full font-semibold py-3 px-6 rounded-lg transition-all disabled:opacity-60 ${
+                    saveState === 'saved'
+                      ? 'bg-cyber-cyan/20 border border-cyber-cyan text-cyber-cyan'
+                      : 'bg-gradient-to-r from-cyber-cyan to-cyber-magenta text-white hover:shadow-lg hover:shadow-cyber-cyan/30'
+                  }`}
+                >
+                  {saveLabel}
+                </button>
+                <p className="text-center text-xs text-gray-500 mt-3">
+                  Saved to your account — reachable from any device.
+                </p>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => onRequestSignup?.()}
+                  className="w-full font-semibold py-3 px-6 rounded-lg transition-all bg-gradient-to-r from-cyber-cyan to-cyber-magenta text-white hover:shadow-lg hover:shadow-cyber-cyan/30"
+                >
+                  Sign up to save your week
+                </button>
+                <p className="text-center text-xs text-gray-500 mt-3">
+                  Create a free account to keep your weekly intentions, synced across every device.
+                </p>
+              </>
+            )}
           </div>
         </div>
       </div>

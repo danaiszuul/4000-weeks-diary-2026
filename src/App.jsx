@@ -12,13 +12,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('today');
   const [showSetup, setShowSetup] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
-
-  useEffect(() => {
-    const birthYear = getBirthYear();
-    if (!birthYear) {
-      setShowSetup(true);
-    }
-  }, []);
+  const [authMode, setAuthMode] = useState('login');
 
   // If the signed-in account carries a birth year, adopt it locally so the
   // life-week math follows the user across devices.
@@ -27,9 +21,13 @@ function App() {
     const accountYear = user?.user_metadata?.birthYear;
     if (accountYear && !getBirthYear()) {
       setBirthYear(accountYear);
-      setShowSetup(false);
     }
   }, [isAuthenticated, user]);
+
+  const openAuth = (mode = 'login') => {
+    setAuthMode(mode);
+    setShowAuth(true);
+  };
 
   const tabs = [
     { id: 'today', label: 'Today', icon: '◆' },
@@ -39,8 +37,15 @@ function App() {
 
   return (
     <div className="min-h-screen">
-      {showSetup && <SetupModal onComplete={() => setShowSetup(false)} />}
-      {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+      {showSetup && (
+        <SetupModal
+          onComplete={() => setShowSetup(false)}
+          onClose={() => setShowSetup(false)}
+        />
+      )}
+      {showAuth && (
+        <AuthModal initialMode={authMode} onClose={() => setShowAuth(false)} />
+      )}
 
       {/* Top bar with account control */}
       <header className="fixed top-0 left-0 right-0 z-30 bg-cyber-darker/80 backdrop-blur-lg border-b border-white/10">
@@ -61,7 +66,7 @@ function App() {
               </div>
             ) : (
               <button
-                onClick={() => setShowAuth(true)}
+                onClick={() => openAuth('login')}
                 className="text-xs font-medium text-cyber-cyan hover:text-white transition-colors"
               >
                 Sign in / Sign up
@@ -73,9 +78,18 @@ function App() {
 
       {/* Main content */}
       <main className="pt-12 pb-20">
-        {activeTab === 'today' && <TodayScreen />}
-        {activeTab === 'week' && <ThisWeekScreen />}
-        {activeTab === 'life' && <LifeBarScreen />}
+        {activeTab === 'today' && (
+          <TodayScreen onRequestSignup={() => openAuth('signup')} />
+        )}
+        {activeTab === 'week' && (
+          <ThisWeekScreen onRequestSignup={() => openAuth('signup')} />
+        )}
+        {activeTab === 'life' && (
+          <LifeBarScreen
+            onSetBirthYear={() => setShowSetup(true)}
+            onRequestSignup={() => openAuth('signup')}
+          />
+        )}
       </main>
 
       {/* Bottom navigation */}

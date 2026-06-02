@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { setBirthYear } from '../utils/lifeWeeks';
 import { useAuth } from '../auth/AuthContext';
 
-export default function SetupModal({ onComplete }) {
+export default function SetupModal({ onComplete, onClose }) {
   const { isAuthenticated, saveBirthYear } = useAuth();
-  const [year, setYear] = useState('1980');
+  const [year, setYear] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -22,14 +22,25 @@ export default function SetupModal({ onComplete }) {
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div className="bg-gradient-to-br from-cyber-dark to-cyber-darker border border-cyber-cyan/30 rounded-2xl p-8 max-w-md w-full shadow-2xl">
-        <h2 className="text-2xl font-bold text-cyber-cyan mb-4">
-          Welcome to 4000 Weeks
-        </h2>
+        <div className="flex items-start justify-between mb-4">
+          <h2 className="text-2xl font-bold text-cyber-cyan">
+            See your life in weeks
+          </h2>
+          {onClose && (
+            <button
+              onClick={onClose}
+              aria-label="Close"
+              className="text-gray-500 hover:text-gray-300 text-xl leading-none"
+            >
+              ×
+            </button>
+          )}
+        </div>
         <p className="text-gray-300 text-sm mb-6 leading-relaxed">
-          This diary helps you focus on what truly matters by reminding you of life's finitude.
-          To calculate your life weeks, we need your birth year.
+          Enter your birth year to chart how many of life's weeks are behind you —
+          a reminder to focus on what truly matters.
         </p>
-        
+
         <form onSubmit={handleSubmit}>
           <label className="block mb-4">
             <span className="text-sm text-gray-400 block mb-2">Birth Year</span>
@@ -39,20 +50,21 @@ export default function SetupModal({ onComplete }) {
               onChange={(e) => setYear(e.target.value)}
               min="1900"
               max={new Date().getFullYear()}
+              placeholder="e.g. 1990"
               className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white font-mono text-lg focus:outline-none focus:border-cyber-cyan focus:ring-2 focus:ring-cyber-cyan/50 transition-all"
               autoFocus
             />
           </label>
 
           <div className="text-xs text-gray-500 mb-6">
-            This is stored locally in your browser and never sent anywhere.
+            Stored on this device. Create an account to keep it synced everywhere.
           </div>
 
           <button
             type="submit"
             className="w-full bg-gradient-to-r from-cyber-cyan to-cyber-magenta text-white font-semibold py-3 px-6 rounded-lg hover:shadow-lg hover:shadow-cyber-cyan/30 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
           >
-            Begin
+            Show my lifeline
           </button>
         </form>
 

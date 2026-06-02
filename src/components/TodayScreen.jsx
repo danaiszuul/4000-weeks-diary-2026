@@ -8,7 +8,7 @@ import { localSetEntry } from '../utils/storage';
 import { useDiary } from '../data/DiaryContext';
 import Calendar from './Calendar';
 
-export default function TodayScreen() {
+export default function TodayScreen({ onRequestSignup }) {
   const { getEntry, saveEntry, entryKeys, loaded, isAuthenticated } = useDiary();
 
   const today = new Date();
@@ -69,13 +69,9 @@ export default function TodayScreen() {
       <div className="max-w-2xl mx-auto">
         {/* Header with date and life week */}
         <div className="text-center mb-6">
-          <button
-            onClick={() => setShowCalendar((s) => !s)}
-            className="font-mono text-lg text-cyber-cyan mb-2 inline-flex items-center gap-2 hover:text-white transition-colors"
-          >
-            <span>{formatDate(selectedDate)}</span>
-            <span className="text-xs opacity-70">▾</span>
-          </button>
+          <div className="font-mono text-lg text-cyber-cyan mb-2">
+            {formatDate(selectedDate)}
+          </div>
           {currentWeek && (
             <div className="font-mono text-sm text-gray-400">
               Life week {currentWeek.toLocaleString()} of {TOTAL_WEEKS.toLocaleString()}
@@ -87,14 +83,29 @@ export default function TodayScreen() {
               style={{ width: `${lifeProgress}%` }}
             />
           </div>
-          {!isToday && (
+          <div className="mt-4 flex items-center justify-center gap-3">
             <button
-              onClick={() => setSelectedKey(getDateKey(today))}
-              className="mt-3 text-xs text-cyber-violet hover:text-cyber-magenta transition-colors"
+              onClick={() => setShowCalendar((s) => !s)}
+              aria-expanded={showCalendar}
+              className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all ${
+                showCalendar
+                  ? 'border-cyber-cyan bg-cyber-cyan/10 text-cyber-cyan'
+                  : 'border-white/15 bg-white/5 text-gray-300 hover:border-cyber-cyan/50 hover:text-cyber-cyan'
+              }`}
             >
-              ← Back to today
+              <span aria-hidden="true">🗓</span>
+              <span>{showCalendar ? 'Hide calendar' : 'Pick another day'}</span>
+              <span className="text-xs opacity-70">{showCalendar ? '▴' : '▾'}</span>
             </button>
-          )}
+            {!isToday && (
+              <button
+                onClick={() => setSelectedKey(getDateKey(today))}
+                className="text-xs text-cyber-violet hover:text-cyber-magenta transition-colors"
+              >
+                ← Back to today
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Calendar (collapsible) */}
@@ -204,22 +215,36 @@ export default function TodayScreen() {
 
           {/* Save */}
           <div className="mt-8 pt-6 border-t border-white/10">
-            <button
-              onClick={handleSave}
-              disabled={saveState === 'saving'}
-              className={`w-full font-semibold py-3 px-6 rounded-lg transition-all disabled:opacity-60 ${
-                saveState === 'saved'
-                  ? 'bg-cyber-cyan/20 border border-cyber-cyan text-cyber-cyan'
-                  : 'bg-gradient-to-r from-cyber-cyan to-cyber-magenta text-white hover:shadow-lg hover:shadow-cyber-cyan/30'
-              }`}
-            >
-              {saveLabel}
-            </button>
-            <p className="text-center text-xs text-gray-500 mt-3">
-              {isAuthenticated
-                ? 'Saved to your account — reachable from any device.'
-                : 'Saved on this device. Sign in to keep it synced everywhere.'}
-            </p>
+            {isAuthenticated ? (
+              <>
+                <button
+                  onClick={handleSave}
+                  disabled={saveState === 'saving'}
+                  className={`w-full font-semibold py-3 px-6 rounded-lg transition-all disabled:opacity-60 ${
+                    saveState === 'saved'
+                      ? 'bg-cyber-cyan/20 border border-cyber-cyan text-cyber-cyan'
+                      : 'bg-gradient-to-r from-cyber-cyan to-cyber-magenta text-white hover:shadow-lg hover:shadow-cyber-cyan/30'
+                  }`}
+                >
+                  {saveLabel}
+                </button>
+                <p className="text-center text-xs text-gray-500 mt-3">
+                  Saved to your account — reachable from any device.
+                </p>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => onRequestSignup?.()}
+                  className="w-full font-semibold py-3 px-6 rounded-lg transition-all bg-gradient-to-r from-cyber-cyan to-cyber-magenta text-white hover:shadow-lg hover:shadow-cyber-cyan/30"
+                >
+                  Sign up to save your entry
+                </button>
+                <p className="text-center text-xs text-gray-500 mt-3">
+                  Create a free account to keep your reflections, synced across every device.
+                </p>
+              </>
+            )}
           </div>
         </div>
       </div>

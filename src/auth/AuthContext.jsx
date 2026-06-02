@@ -48,8 +48,17 @@ export function AuthProvider({ children }) {
     return u;
   }, []);
 
-  const signup = useCallback(async (email, password, name) => {
-    return identitySignup(email, password, name ? { full_name: name } : undefined);
+  const signup = useCallback(async (email, password, name, birthYear) => {
+    // Birth year is captured at sign-up and stored in the account so the
+    // life-week math follows the user across devices.
+    const metadata = {};
+    if (name) metadata.full_name = name;
+    if (birthYear) metadata.birthYear = birthYear;
+    return identitySignup(
+      email,
+      password,
+      Object.keys(metadata).length ? metadata : undefined,
+    );
   }, []);
 
   const logout = useCallback(async () => {

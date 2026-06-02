@@ -1,6 +1,6 @@
 import { getCurrentLifeWeek, getBirthYear, getWeeksRemaining, getLifeProgress, TOTAL_WEEKS } from '../utils/lifeWeeks';
 
-export default function LifeBarScreen() {
+export default function LifeBarScreen({ onSetBirthYear, onRequestSignup }) {
   const birthYear = getBirthYear();
   const currentWeek = getCurrentLifeWeek(birthYear);
   const weeksRemaining = getWeeksRemaining(currentWeek);
@@ -25,7 +25,7 @@ export default function LifeBarScreen() {
             </>
           ) : (
             <div className="text-gray-400 mb-6">
-              Set your birth year to see your life progress
+              See how many of life's weeks are behind you.
             </div>
           )}
           <div className="max-w-2xl mx-auto text-sm text-gray-300 leading-relaxed">
@@ -97,11 +97,23 @@ export default function LifeBarScreen() {
             </>
           ) : (
             <div className="text-center py-12">
-              <p className="text-gray-400 mb-4">
-                To see your life progress, you need to set your birth year.
+              <p className="text-gray-300 mb-6">
+                Enter your birth year to chart your lifeline — no account needed.
               </p>
-              <p className="text-sm text-gray-500">
-                This will be saved in your browser's local storage.
+              <button
+                onClick={() => onSetBirthYear?.()}
+                className="bg-gradient-to-r from-cyber-cyan to-cyber-magenta text-white font-semibold py-3 px-8 rounded-lg hover:shadow-lg hover:shadow-cyber-cyan/30 transition-all"
+              >
+                Set birth year
+              </button>
+              <p className="text-xs text-gray-500 mt-4">
+                Want to keep a diary too?{' '}
+                <button
+                  onClick={() => onRequestSignup?.()}
+                  className="text-cyber-cyan hover:underline"
+                >
+                  Sign up
+                </button>
               </p>
             </div>
           )}

@@ -49,9 +49,20 @@ function App() {
     { id: 'life', label: 'Life Bar', icon: '◈' },
   ];
 
+  if (showSetup && setupRequired) {
+    return (
+      <SetupModal
+        onComplete={() => {
+          setShowSetup(false);
+          setSetupRequired(false);
+        }}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen">
-      {showSetup && (
+      {showSetup && !setupRequired && (
         <SetupModal
           onComplete={() => {
             setShowSetup(false);

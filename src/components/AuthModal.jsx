@@ -73,7 +73,7 @@ export default function AuthModal({ onClose, initialMode = 'login' }) {
       <div className="bg-gradient-to-br from-cyber-dark to-cyber-darker border border-cyber-cyan/30 rounded-2xl p-8 max-w-md w-full shadow-2xl">
         <div className="flex items-start justify-between mb-2">
           <h2 className="text-2xl font-bold text-cyber-cyan">
-            {mode === 'login' ? 'Welcome back' : 'Create your account'}
+            {mode === 'login' ? 'Return to your path' : 'Preserve your practice'}
           </h2>
           <button
             onClick={onClose}
@@ -85,8 +85,8 @@ export default function AuthModal({ onClose, initialMode = 'login' }) {
         </div>
         <p className="text-gray-300 text-sm mb-6 leading-relaxed">
           {mode === 'login'
-            ? 'Sign in to save your reflections and pick up where you left off on any device.'
-            : 'An account keeps your diary in sync so you can return to it anywhere.'}
+            ? 'Sign in to access your legacy of daily practices and continue your reflections.'
+            : 'By preserving your reflections, you create an enduring record of your daily focus. Your history is stored securely, keeping your path in sync on any device.'}
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -151,29 +151,29 @@ export default function AuthModal({ onClose, initialMode = 'login' }) {
             disabled={busy}
             className="w-full bg-gradient-to-r from-cyber-cyan to-cyber-magenta text-white font-semibold py-3 px-6 rounded-lg hover:shadow-lg hover:shadow-cyber-cyan/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {busy ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}
+            {busy ? 'Please wait…' : mode === 'login' ? 'Resume practice' : 'Begin legacy'}
           </button>
         </form>
 
         <div className="mt-6 text-center text-sm text-gray-400">
           {mode === 'login' ? (
             <>
-              No account yet?{' '}
+              New to the practice?{' '}
               <button
                 onClick={() => { setMode('signup'); setError(''); setNotice(''); }}
                 className="text-cyber-cyan hover:underline"
               >
-                Create one
+                Begin your legacy
               </button>
             </>
           ) : (
             <>
-              Already have an account?{' '}
+              Already on this path?{' '}
               <button
                 onClick={() => { setMode('login'); setError(''); setNotice(''); }}
                 className="text-cyber-cyan hover:underline"
               >
-                Sign in
+                Resume practice
               </button>
             </>
           )}

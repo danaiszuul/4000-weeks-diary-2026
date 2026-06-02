@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { setBirthYear } from '../utils/lifeWeeks';
+import { useAuth } from '../auth/AuthContext';
 
 export default function SetupModal({ onComplete }) {
+  const { isAuthenticated, saveBirthYear } = useAuth();
   const [year, setYear] = useState('1980');
 
   const handleSubmit = (e) => {
@@ -9,6 +11,10 @@ export default function SetupModal({ onComplete }) {
     const yearNum = parseInt(year, 10);
     if (yearNum >= 1900 && yearNum <= new Date().getFullYear()) {
       setBirthYear(yearNum);
+      // Keep it on the account too, when signed in, so it follows the user.
+      if (isAuthenticated) {
+        saveBirthYear(yearNum).catch(() => {});
+      }
       onComplete();
     }
   };

@@ -1,25 +1,56 @@
 import { useState, useEffect } from 'react';
 import { getWeekOfYear, getWeekKey, getCurrentLifeWeek, getBirthYear, TOTAL_WEEKS } from '../utils/lifeWeeks';
-import { getWeeklyEntry, saveWeeklyEntry } from '../utils/storage';
+import { localSetEntry } from '../utils/storage';
+import { useDiary } from '../data/DiaryContext';
 
 export default function ThisWeekScreen() {
+  const { getEntry, saveEntry, loaded, isAuthenticated } = useDiary();
+
   const today = new Date();
   const weekOfYear = getWeekOfYear(today);
   const weekKey = getWeekKey(today);
   const birthYear = getBirthYear();
   const currentWeek = getCurrentLifeWeek(birthYear);
-  
-  const [entry, setEntry] = useState(() => getWeeklyEntry(weekKey));
+
+  const [entry, setEntry] = useState(() => getEntry('weekly', weekKey));
+  const [saveState, setSaveState] = useState('idle');
 
   useEffect(() => {
-    saveWeeklyEntry(weekKey, entry);
-  }, [entry, weekKey]);
+    setEntry(getEntry('weekly', weekKey));
+    setSaveState('idle');
+  }, [weekKey, loaded, getEntry]);
+
+  const update = (patch) => {
+    const next = { ...entry, ...patch };
+    setEntry(next);
+    localSetEntry('weekly', weekKey, next);
+    setSaveState('dirty');
+  };
 
   const updateNotToDo = (index, value) => {
-    const newNotToDo = [...entry.notToDo];
-    newNotToDo[index] = value;
-    setEntry({ ...entry, notToDo: newNotToDo });
+    const notToDo = [...entry.notToDo];
+    notToDo[index] = value;
+    update({ notToDo });
   };
+
+  const handleSave = async () => {
+    setSaveState('saving');
+    try {
+      await saveEntry('weekly', weekKey, entry);
+      setSaveState('saved');
+      setTimeout(() => setSaveState((s) => (s === 'saved' ? 'idle' : s)), 2500);
+    } catch {
+      setSaveState('error');
+    }
+  };
+
+  const saveLabel = {
+    idle: 'Save week',
+    dirty: 'Save week',
+    saving: 'Saving…',
+    saved: 'Saved ✓',
+    error: 'Retry save',
+  }[saveState];
 
   return (
     <div className="min-h-screen px-4 py-8 pb-24">
@@ -38,13 +69,13 @@ export default function ThisWeekScreen() {
 
         {/* Glass card container */}
         <div className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-6 shadow-2xl">
-          
+
           {/* What actually matters this week */}
           <div className="mb-8">
             <h2 className="text-sm font-semibold text-cyber-magenta mb-4 tracking-wide">
               WHAT ACTUALLY MATTERS THIS WEEK
             </h2>
-            
+
             <div className="mb-4">
               <label className="text-xs text-gray-400 block mb-2">
                 Core focus (1 thing):
@@ -52,7 +83,7 @@ export default function ThisWeekScreen() {
               <input
                 type="text"
                 value={entry.coreFocus}
-                onChange={(e) => setEntry({ ...entry, coreFocus: e.target.value })}
+                onChange={(e) => update({ coreFocus: e.target.value })}
                 placeholder="The one thing that must move forward..."
                 className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyber-cyan/50 focus:ring-1 focus:ring-cyber-cyan/50 transition-all"
               />
@@ -65,7 +96,7 @@ export default function ThisWeekScreen() {
               <input
                 type="text"
                 value={entry.supportMove}
-                onChange={(e) => setEntry({ ...entry, supportMove: e.target.value })}
+                onChange={(e) => update({ supportMove: e.target.value })}
                 placeholder="One supporting action..."
                 className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyber-cyan/50 focus:ring-1 focus:ring-cyber-cyan/50 transition-all"
               />
@@ -98,8 +129,7 @@ export default function ThisWeekScreen() {
             <h2 className="text-sm font-semibold text-cyber-cyan mb-4 tracking-wide">
               END-OF-WEEK REFLECTION
             </h2>
-            
-            {/* Did this week reflect priorities? */}
+
             <div className="mb-4">
               <label className="text-xs text-gray-400 block mb-2">
                 Did this week reflect my real priorities?
@@ -108,7 +138,7 @@ export default function ThisWeekScreen() {
                 {['Yes', 'No', 'Mixed'].map((option) => (
                   <button
                     key={option}
-                    onClick={() => setEntry({ ...entry, reflection: option })}
+                    onClick={() => update({ reflection: option })}
                     className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
                       entry.reflection === option
                         ? 'bg-cyber-cyan/20 border-cyber-cyan text-cyber-cyan'
@@ -121,7 +151,6 @@ export default function ThisWeekScreen() {
               </div>
             </div>
 
-            {/* One win */}
             <div className="mb-4">
               <label className="text-xs text-gray-400 block mb-2">
                 One win:
@@ -129,13 +158,12 @@ export default function ThisWeekScreen() {
               <input
                 type="text"
                 value={entry.win}
-                onChange={(e) => setEntry({ ...entry, win: e.target.value })}
+                onChange={(e) => update({ win: e.target.value })}
                 placeholder="What's worth remembering from this week..."
                 className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyber-cyan/50 focus:ring-1 focus:ring-cyber-cyan/50 transition-all"
               />
             </div>
 
-            {/* One thing to shrink or cut */}
             <div>
               <label className="text-xs text-gray-400 block mb-2">
                 One habit/obligation to shrink or cut:
@@ -143,11 +171,31 @@ export default function ThisWeekScreen() {
               <input
                 type="text"
                 value={entry.shrink}
-                onChange={(e) => setEntry({ ...entry, shrink: e.target.value })}
+                onChange={(e) => update({ shrink: e.target.value })}
                 placeholder="What will you reduce next week..."
                 className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyber-cyan/50 focus:ring-1 focus:ring-cyber-cyan/50 transition-all"
               />
             </div>
+          </div>
+
+          {/* Save */}
+          <div className="mt-8 pt-6 border-t border-white/10">
+            <button
+              onClick={handleSave}
+              disabled={saveState === 'saving'}
+              className={`w-full font-semibold py-3 px-6 rounded-lg transition-all disabled:opacity-60 ${
+                saveState === 'saved'
+                  ? 'bg-cyber-cyan/20 border border-cyber-cyan text-cyber-cyan'
+                  : 'bg-gradient-to-r from-cyber-cyan to-cyber-magenta text-white hover:shadow-lg hover:shadow-cyber-cyan/30'
+              }`}
+            >
+              {saveLabel}
+            </button>
+            <p className="text-center text-xs text-gray-500 mt-3">
+              {isAuthenticated
+                ? 'Saved to your account — reachable from any device.'
+                : 'Saved on this device. Sign in to keep it synced everywhere.'}
+            </p>
           </div>
         </div>
       </div>

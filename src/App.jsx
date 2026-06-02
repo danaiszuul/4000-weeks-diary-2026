@@ -10,7 +10,11 @@ import { useAuth } from './auth/AuthContext';
 function App() {
   const { user, isAuthenticated, ready, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('today');
-  const [showSetup, setShowSetup] = useState(false);
+  // The lifeline only makes sense once we know the birth year, so make it the
+  // very first step: gate the diary behind a mandatory birthday prompt whenever
+  // no birth year is known yet.
+  const [showSetup, setShowSetup] = useState(() => !getBirthYear());
+  const [setupRequired, setSetupRequired] = useState(() => !getBirthYear());
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState('login');
 
@@ -21,6 +25,8 @@ function App() {
     const accountYear = user?.user_metadata?.birthYear;
     if (accountYear && !getBirthYear()) {
       setBirthYear(accountYear);
+      setShowSetup(false);
+      setSetupRequired(false);
     }
   }, [isAuthenticated, user]);
 
@@ -39,8 +45,13 @@ function App() {
     <div className="min-h-screen">
       {showSetup && (
         <SetupModal
-          onComplete={() => setShowSetup(false)}
-          onClose={() => setShowSetup(false)}
+          onComplete={() => {
+            setShowSetup(false);
+            setSetupRequired(false);
+          }}
+          onClose={
+            setupRequired ? undefined : () => setShowSetup(false)
+          }
         />
       )}
       {showAuth && (
@@ -86,7 +97,10 @@ function App() {
         )}
         {activeTab === 'life' && (
           <LifeBarScreen
-            onSetBirthYear={() => setShowSetup(true)}
+            onSetBirthYear={() => {
+              setSetupRequired(false);
+              setShowSetup(true);
+            }}
             onRequestSignup={() => openAuth('signup')}
           />
         )}

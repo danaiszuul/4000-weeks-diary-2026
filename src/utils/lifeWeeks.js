@@ -68,10 +68,33 @@ export function formatDate(date = new Date()) {
 }
 
 /**
- * Get date key for localStorage (YYYY-MM-DD)
+ * Get date key (YYYY-MM-DD) in the user's local timezone so the diary day
+ * matches the calendar day regardless of UTC offset.
  */
 export function getDateKey(date = new Date()) {
-  return date.toISOString().split('T')[0];
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+/**
+ * Parse a YYYY-MM-DD key back into a Date at local midnight.
+ */
+export function parseDateKey(key) {
+  const [y, m, d] = key.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+/**
+ * Whether two dates fall on the same calendar day.
+ */
+export function isSameDay(a, b) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
 }
 
 /**

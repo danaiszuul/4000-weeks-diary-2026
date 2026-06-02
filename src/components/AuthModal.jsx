@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { AuthError, MissingIdentityError } from '@netlify/identity';
 import { useAuth } from '../auth/AuthContext';
-import { getBirthYear, setBirthYear } from '../utils/lifeWeeks';
+import { getBirthDate, getDateKey, setBirthDate } from '../utils/lifeWeeks';
 
-const THIS_YEAR = new Date().getFullYear();
+const TODAY_KEY = getDateKey(new Date());
 
 export default function AuthModal({ onClose, initialMode = 'login' }) {
   const { login, signup } = useAuth();
@@ -11,10 +11,10 @@ export default function AuthModal({ onClose, initialMode = 'login' }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  // Prefill the birth year if one was already entered to preview the lifeline.
-  const [birthYear, setBirthYearField] = useState(() => {
-    const existing = getBirthYear();
-    return existing ? String(existing) : '';
+  // Prefill the birthday if one was already entered to preview the lifeline.
+  const [birthday, setBirthday] = useState(() => {
+    const existing = getBirthDate();
+    return existing || '';
   });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -30,16 +30,19 @@ export default function AuthModal({ onClose, initialMode = 'login' }) {
         await login(email, password);
         onClose();
       } else {
-        const yearNum = parseInt(birthYear, 10);
-        if (!yearNum || yearNum < 1900 || yearNum > THIS_YEAR) {
-          setError('Please enter a valid birth year.');
+        const birthDate = new Date(`${birthday}T00:00:00`);
+        const earliestDate = new Date('1900-01-01T00:00:00');
+        const latestDate = new Date(`${TODAY_KEY}T00:00:00`);
+
+        if (!birthday || birthDate < earliestDate || birthDate > latestDate) {
+          setError('Please enter a valid birthday.');
           setBusy(false);
           return;
         }
         // Persist locally so the lifeline works immediately, and pass it to the
         // account so it follows the user across devices.
-        setBirthYear(yearNum);
-        const u = await signup(email, password, name, yearNum);
+        setBirthDate(birthday);
+        const u = await signup(email, password, name, birthday);
         if (u?.emailVerified) {
           // Autoconfirm is on — the user is logged in immediately.
           await login(email, password);
@@ -101,15 +104,14 @@ export default function AuthModal({ onClose, initialMode = 'login' }) {
 
           {mode === 'signup' && (
             <label className="block">
-              <span className="text-sm text-gray-400 block mb-2">Birth year</span>
+              <span className="text-sm text-gray-400 block mb-2">Birthday</span>
               <input
-                type="number"
+                type="date"
                 required
-                value={birthYear}
-                onChange={(e) => setBirthYearField(e.target.value)}
-                min="1900"
-                max={THIS_YEAR}
-                placeholder="e.g. 1990"
+                value={birthday}
+                onChange={(e) => setBirthday(e.target.value)}
+                min="1900-01-01"
+                max={TODAY_KEY}
                 className="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white font-mono focus:outline-none focus:border-cyber-cyan focus:ring-2 focus:ring-cyber-cyan/50 transition-all"
               />
               <span className="text-xs text-gray-500 block mt-2">

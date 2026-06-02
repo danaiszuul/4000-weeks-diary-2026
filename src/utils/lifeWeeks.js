@@ -4,27 +4,52 @@ export const LIFE_EXPECTANCY = 90;
 export const TOTAL_WEEKS = LIFE_EXPECTANCY * 52; // 4680 weeks
 
 /**
- * Get the user's birth year from localStorage or return null
+ * Get the user's birthday from localStorage or fall back to a legacy birth year.
  */
-export function getBirthYear() {
-  const stored = localStorage.getItem('birthYear');
-  return stored ? parseInt(stored, 10) : null;
+export function getBirthDate() {
+  const stored = localStorage.getItem('birthDate');
+  if (stored) return stored;
+
+  const legacyYear = localStorage.getItem('birthYear');
+  return legacyYear ? `${legacyYear}-01-01` : null;
 }
 
 /**
- * Set the user's birth year in localStorage
+ * Set the user's birthday in localStorage.
+ */
+export function setBirthDate(dateKey) {
+  localStorage.setItem('birthDate', dateKey);
+  localStorage.setItem('birthYear', dateKey.slice(0, 4));
+}
+
+/**
+ * Get the user's birth year from localStorage or return null.
+ */
+export function getBirthYear() {
+  const birthDate = getBirthDate();
+  return birthDate ? parseInt(birthDate.slice(0, 4), 10) : null;
+}
+
+/**
+ * Set the user's birth year in localStorage.
  */
 export function setBirthYear(year) {
   localStorage.setItem('birthYear', year.toString());
+  if (!localStorage.getItem('birthDate')) {
+    localStorage.setItem('birthDate', `${year}-01-01`);
+  }
 }
 
 /**
- * Calculate current life week based on birth year
+ * Calculate current life week based on birthday or birth year.
  */
-export function getCurrentLifeWeek(birthYear) {
-  if (!birthYear) return null;
-  
-  const birthDate = new Date(birthYear, 0, 1); // Jan 1 of birth year
+export function getCurrentLifeWeek(birthdayOrYear) {
+  if (!birthdayOrYear) return null;
+
+  const birthDate =
+    typeof birthdayOrYear === 'number'
+      ? new Date(birthdayOrYear, 0, 1)
+      : parseDateKey(birthdayOrYear);
   const today = new Date();
   const diffTime = today - birthDate;
   const diffWeeks = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7));

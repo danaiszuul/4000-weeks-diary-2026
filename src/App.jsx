@@ -4,29 +4,37 @@ import ThisWeekScreen from './components/ThisWeekScreen';
 import LifeBarScreen from './components/LifeBarScreen';
 import SetupModal from './components/SetupModal';
 import AuthModal from './components/AuthModal';
-import { getBirthYear, setBirthYear } from './utils/lifeWeeks';
+import { getBirthDate, setBirthDate, setBirthYear } from './utils/lifeWeeks';
 import { useAuth } from './auth/AuthContext';
 
 function App() {
   const { user, isAuthenticated, ready, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('today');
-  // The lifeline only makes sense once we know the birth year, so make it the
-  // very first step: gate the diary behind a mandatory birthday prompt whenever
-  // no birth year is known yet.
-  const [showSetup, setShowSetup] = useState(() => !getBirthYear());
-  const [setupRequired, setSetupRequired] = useState(() => !getBirthYear());
+  // The lifeline only makes sense once we know the birthday, so make it the
+  // very first step before the diary appears.
+  const [showSetup, setShowSetup] = useState(() => !getBirthDate());
+  const [setupRequired, setSetupRequired] = useState(() => !getBirthDate());
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState('login');
 
-  // If the signed-in account carries a birth year, adopt it locally so the
+  // If the signed-in account carries a birthday, adopt it locally so the
   // life-week math follows the user across devices.
   useEffect(() => {
     if (!isAuthenticated) return;
+    const accountBirthday = user?.user_metadata?.birthDate;
     const accountYear = user?.user_metadata?.birthYear;
-    if (accountYear && !getBirthYear()) {
+    if (accountBirthday && !getBirthDate()) {
+      setBirthDate(accountBirthday);
+      queueMicrotask(() => {
+        setShowSetup(false);
+        setSetupRequired(false);
+      });
+    } else if (accountYear && !getBirthDate()) {
       setBirthYear(accountYear);
-      setShowSetup(false);
-      setSetupRequired(false);
+      queueMicrotask(() => {
+        setShowSetup(false);
+        setSetupRequired(false);
+      });
     }
   }, [isAuthenticated, user]);
 

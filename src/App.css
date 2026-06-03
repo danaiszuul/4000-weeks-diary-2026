@@ -40,3 +40,51 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Smoke rising effect */
+.smoke-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  top: 0;
+  pointer-events: none;
+  z-index: 50;
+  overflow: hidden;
+  background: rgba(5, 5, 8, 0.4);
+  backdrop-filter: blur(2px);
+  transition: opacity 0.5s ease;
+}
+
+.smoke-particle {
+  position: absolute;
+  bottom: -100px;
+  left: var(--left);
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle, rgba(0, 240, 255, 0.15) 0%, rgba(255, 0, 255, 0.08) 40%, transparent 70%);
+  border-radius: 50%;
+  animation: smokeRise 2.5s infinite ease-out;
+  animation-delay: var(--delay);
+  opacity: 0;
+}
+
+@keyframes smokeRise {
+  0% {
+    transform: translateY(0) scale(0.4) rotate(0deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 0.3;
+    transform: translateY(-50vh) scale(1.6) rotate(180deg);
+  }
+  100% {
+    transform: translateY(-110vh) scale(3.2) rotate(360deg);
+    opacity: 0;
+    filter: blur(25px);
+  }
+}
+

@@ -29,8 +29,9 @@ export function AuthProvider({ children }) {
       const current = await getUser();
       if (active) {
         if (current) {
-          const accountBirthday = current.user_metadata?.birthDate;
-          const accountYear = current.user_metadata?.birthYear;
+          const meta = current.userMetadata || current.user_metadata;
+          const accountBirthday = meta?.birthDate;
+          const accountYear = meta?.birthYear;
           if (accountBirthday) {
             setBirthDate(accountBirthday);
           } else if (accountYear) {
@@ -45,8 +46,9 @@ export function AuthProvider({ children }) {
 
     const unsubscribe = onAuthChange((_event, nextUser) => {
       if (nextUser) {
-        const accountBirthday = nextUser.user_metadata?.birthDate;
-        const accountYear = nextUser.user_metadata?.birthYear;
+        const meta = nextUser.userMetadata || nextUser.user_metadata;
+        const accountBirthday = meta?.birthDate;
+        const accountYear = meta?.birthYear;
         if (accountBirthday) {
           setBirthDate(accountBirthday);
         } else if (accountYear) {
@@ -91,8 +93,9 @@ export function AuthProvider({ children }) {
   const login = useCallback(async (email, password) => {
     const u = await identityLogin(email, password);
     if (u) {
-      const accountBirthday = u.user_metadata?.birthDate;
-      const accountYear = u.user_metadata?.birthYear;
+      const meta = u.userMetadata || u.user_metadata;
+      const accountBirthday = meta?.birthDate;
+      const accountYear = meta?.birthYear;
       if (accountBirthday) {
         setBirthDate(accountBirthday);
       } else if (accountYear) {

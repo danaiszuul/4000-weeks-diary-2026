@@ -60,7 +60,7 @@ function App() {
             isAuthenticated ? (
               <div className="flex items-center gap-3">
                 <span className="text-xs text-gray-400 hidden sm:inline max-w-[12rem] truncate">
-                  {user?.user_metadata?.full_name || user?.email}
+                  {user?.name || user?.userMetadata?.full_name || user?.user_metadata?.full_name || user?.email}
                 </span>
                 <button
                   onClick={logout}

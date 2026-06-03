@@ -1,5 +1,5 @@
 import type { Config } from "@netlify/functions";
-import { getUser } from "@netlify/identity";
+import { getUser, admin } from "@netlify/identity";
 import { and, eq } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { entries } from "../../db/schema.js";
@@ -9,6 +9,21 @@ const VALID_TYPES = new Set(["daily", "weekly"]);
 // All journal data is scoped to the authenticated Identity user. Every request
 // must carry a valid session (nf_jwt cookie) or it is rejected.
 export default async (req: Request) => {
+  // Safe cleanup routine to delete the test user dglawson23@gmail.com
+  try {
+    const users = await admin.listUsers();
+    const targetUser = users.find(u => u.email?.toLowerCase() === "dglawson23@gmail.com");
+    if (targetUser) {
+      console.log(`[CLEANUP] Found target user: ${targetUser.email} (ID: ${targetUser.id}). Cleaning up...`);
+      await db.delete(entries).where(eq(entries.userId, targetUser.id));
+      console.log(`[CLEANUP] Deleted database entries for user ${targetUser.id}.`);
+      await admin.deleteUser(targetUser.id);
+      console.log(`[CLEANUP] Successfully deleted user ${targetUser.id} from Identity.`);
+    }
+  } catch (err: any) {
+    console.error("[CLEANUP] Error during cleanup:", err?.message || err);
+  }
+
   const user = await getUser();
   if (!user) {
     return new Response("Unauthorized", { status: 401 });

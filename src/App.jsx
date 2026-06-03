@@ -1,42 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import TodayScreen from './components/TodayScreen';
 import ThisWeekScreen from './components/ThisWeekScreen';
 import LifeBarScreen from './components/LifeBarScreen';
-import SetupModal from './components/SetupModal';
 import AuthModal from './components/AuthModal';
-import { getBirthDate, setBirthDate, setBirthYear } from './utils/lifeWeeks';
+import LandingScreen from './components/LandingScreen';
 import { useAuth } from './auth/AuthContext';
 
 function App() {
   const { user, isAuthenticated, ready, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('today');
-  // The lifeline only makes sense once we know the birthday, so make it the
-  // very first step before the diary appears.
-  const [showSetup, setShowSetup] = useState(() => !getBirthDate());
-  const [setupRequired, setSetupRequired] = useState(() => !getBirthDate());
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState('login');
-
-  // If the signed-in account carries a birthday, adopt it locally so the
-  // life-week math follows the user across devices.
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    const accountBirthday = user?.user_metadata?.birthDate;
-    const accountYear = user?.user_metadata?.birthYear;
-    if (accountBirthday && !getBirthDate()) {
-      setBirthDate(accountBirthday);
-      queueMicrotask(() => {
-        setShowSetup(false);
-        setSetupRequired(false);
-      });
-    } else if (accountYear && !getBirthDate()) {
-      setBirthYear(accountYear);
-      queueMicrotask(() => {
-        setShowSetup(false);
-        setSetupRequired(false);
-      });
-    }
-  }, [isAuthenticated, user]);
 
   const openAuth = (mode = 'login') => {
     setAuthMode(mode);
@@ -49,30 +23,31 @@ function App() {
     { id: 'life', label: 'Life Bar', icon: '◈' },
   ];
 
-  if (showSetup && setupRequired) {
+  if (!ready) {
     return (
-      <SetupModal
-        onComplete={() => {
-          setShowSetup(false);
-          setSetupRequired(false);
-        }}
-      />
+      <div className="min-h-screen bg-cyber-darker flex flex-col items-center justify-center font-mono text-xs tracking-widest text-cyber-cyan">
+        <div className="mb-4 text-sm animate-pulse">4000 WEEKS</div>
+        <div className="h-1 w-24 bg-gray-800 rounded-full overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-cyber-cyan to-cyber-magenta animate-glow-pulse w-full" />
+        </div>
+        <span className="mt-4 text-[10px] text-gray-500">INITIALIZING PROTOCOL...</span>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <>
+        <LandingScreen onOpenAuth={openAuth} />
+        {showAuth && (
+          <AuthModal initialMode={authMode} onClose={() => setShowAuth(false)} />
+        )}
+      </>
     );
   }
 
   return (
     <div className="min-h-screen">
-      {showSetup && !setupRequired && (
-        <SetupModal
-          onComplete={() => {
-            setShowSetup(false);
-            setSetupRequired(false);
-          }}
-          onClose={
-            setupRequired ? undefined : () => setShowSetup(false)
-          }
-        />
-      )}
       {showAuth && (
         <AuthModal initialMode={authMode} onClose={() => setShowAuth(false)} />
       )}
@@ -116,10 +91,6 @@ function App() {
         )}
         {activeTab === 'life' && (
           <LifeBarScreen
-            onSetBirthYear={() => {
-              setSetupRequired(false);
-              setShowSetup(true);
-            }}
             onRequestSignup={() => openAuth('signup')}
           />
         )}

@@ -8,6 +8,7 @@ import {
   onAuthChange,
   updateUser,
 } from '@netlify/identity';
+import { setBirthDate } from '../utils/lifeWeeks';
 
 const AuthContext = createContext(null);
 
@@ -27,12 +28,32 @@ export function AuthProvider({ children }) {
       }
       const current = await getUser();
       if (active) {
+        if (current) {
+          const accountBirthday = current.user_metadata?.birthDate;
+          const accountYear = current.user_metadata?.birthYear;
+          if (accountBirthday) {
+            setBirthDate(accountBirthday);
+          } else if (accountYear) {
+            localStorage.setItem('birthYear', String(accountYear));
+            localStorage.setItem('birthDate', `${accountYear}-01-01`);
+          }
+        }
         setUser(current);
         setReady(true);
       }
     })();
 
     const unsubscribe = onAuthChange((_event, nextUser) => {
+      if (nextUser) {
+        const accountBirthday = nextUser.user_metadata?.birthDate;
+        const accountYear = nextUser.user_metadata?.birthYear;
+        if (accountBirthday) {
+          setBirthDate(accountBirthday);
+        } else if (accountYear) {
+          localStorage.setItem('birthYear', String(accountYear));
+          localStorage.setItem('birthDate', `${accountYear}-01-01`);
+        }
+      }
       setUser(nextUser ?? null);
     });
 
@@ -42,8 +63,43 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
+  // Clear local storage and cookies if not authenticated (when ready settles or user logs out)
+  useEffect(() => {
+    if (ready && !user) {
+      // Clear localStorage entries
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (
+          key &&
+          (key.startsWith('daily-') ||
+            key.startsWith('weekly-') ||
+            key === 'birthDate' ||
+            key === 'birthYear' ||
+            key === 'gotrue.user')
+        ) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach((key) => localStorage.removeItem(key));
+
+      // Clear nf_jwt cookie
+      document.cookie = 'nf_jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    }
+  }, [ready, user]);
+
   const login = useCallback(async (email, password) => {
     const u = await identityLogin(email, password);
+    if (u) {
+      const accountBirthday = u.user_metadata?.birthDate;
+      const accountYear = u.user_metadata?.birthYear;
+      if (accountBirthday) {
+        setBirthDate(accountBirthday);
+      } else if (accountYear) {
+        localStorage.setItem('birthYear', String(accountYear));
+        localStorage.setItem('birthDate', `${accountYear}-01-01`);
+      }
+    }
     setUser(u);
     return u;
   }, []);
